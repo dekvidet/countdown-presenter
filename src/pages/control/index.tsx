@@ -4,19 +4,26 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { formatDuration } from '../../utils/formatDuration';
 import dayjs, { Dayjs } from 'dayjs';
 
+const soundFiles = [
+  '2_1bell.mp3',
+  '2bell.mp3',
+  'bell.mp3',
+  'bike_bell_long.mp3',
+  'bike_bell_short.mp3',
+  'medium_bike_bell.mp3',
+];
+
+const initialSounds = soundFiles.map(file => ({
+  name: file,
+  url: new URL(`sounds/${file}`, window.location.href).href,
+}));
+
 const ControlPage = () => {
   const [time, setTime] = useState(0);
   const [startTime, setStartTime] = useState<Dayjs | null>(dayjs().startOf('day'));
   const [isPaused, setIsPaused] = useState(true);
   const [alerts, setAlerts] = useState<{ time: number; sound: string }[]>([]);
-  const [sounds, setSounds] = useState<{ name: string; url: string }[]>([
-    { name: '2_1bell.mp3', url: '/sounds/2_1bell.mp3' },
-    { name: '2bell.mp3', url: '/sounds/2bell.mp3' },
-    { name: 'bell.mp3', url: '/sounds/bell.mp3' },
-    { name: 'bike_bell_long.mp3', url: '/sounds/bike_bell_long.mp3' },
-    { name: 'bike_bell_short.mp3', url: '/sounds/bike_bell_short.mp3' },
-    { name: 'medium_bike_bell.mp3', url: '/sounds/medium_bike_bell.mp3' },
-  ]);
+  const [sounds, setSounds] = useState<{ name: string; url: string }[]>(initialSounds);
 
   const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
   const timerRef = useRef<number | null>(null);
