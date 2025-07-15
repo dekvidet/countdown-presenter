@@ -9,7 +9,14 @@ const ControlPage = () => {
   const [startTime, setStartTime] = useState<Dayjs | null>(dayjs().startOf('day'));
   const [isPaused, setIsPaused] = useState(true);
   const [alerts, setAlerts] = useState<{ time: number; sound: string }[]>([]);
-  const [sounds, setSounds] = useState<{ name: string; url: string }[]>([{ name: 'bell.wav', url: '/sounds/bell.wav' }, { name: 'bike_bell.flac', url: '/sounds/bike_bell.flac' }, { name: 'tick_tock.wav', url: '/sounds/tick_tock.wav' }]);
+  const [sounds, setSounds] = useState<{ name: string; url: string }[]>([
+    { name: '2_1bell.mp3', url: '/sounds/2_1bell.mp3' },
+    { name: '2bell.mp3', url: '/sounds/2bell.mp3' },
+    { name: 'bell.mp3', url: '/sounds/bell.mp3' },
+    { name: 'bike_bell_long.mp3', url: '/sounds/bike_bell_long.mp3' },
+    { name: 'bike_bell_short.mp3', url: '/sounds/bike_bell_short.mp3' },
+    { name: 'medium_bike_bell.mp3', url: '/sounds/medium_bike_bell.mp3' },
+  ]);
 
   const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
