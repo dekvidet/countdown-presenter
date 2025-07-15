@@ -1,3 +1,7 @@
+/// <reference lib="webworker" />
+
+declare const self: SharedWorkerGlobalScope;
+
 const ports = new Set<MessagePort>();
 
 const broadcast = (data: { rawTime: number; formattedTime: string }) => {
@@ -6,11 +10,11 @@ const broadcast = (data: { rawTime: number; formattedTime: string }) => {
   }
 };
 
-onconnect = (e) => {
+self.onconnect = (e: MessageEvent) => {
   const port = e.ports[0];
   ports.add(port);
 
-  port.onmessage = (event) => {
+  port.onmessage = (event: MessageEvent) => {
     const { type, payload } = event.data;
 
     if (type === 'update') {

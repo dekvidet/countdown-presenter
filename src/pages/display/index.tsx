@@ -9,7 +9,7 @@ const DisplayPage = () => {
 
   useEffect(() => {
     worker.port.onmessage = (event) => {
-      const { rawTime, formattedTime } = event.data;
+      const { rawTime } = event.data;
       setTime(rawTime);
     };
 

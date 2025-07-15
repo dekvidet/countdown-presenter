@@ -19,7 +19,7 @@ const ControlPage = () => {
   ]);
 
   const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     worker.port.postMessage({ type: 'update', payload: { rawTime: time, formattedTime: formatDuration(time) } });
