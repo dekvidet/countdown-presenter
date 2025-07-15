@@ -121,19 +121,29 @@ const ControlPage = () => {
       </Box>
       <Box sx={{ mt: 4 }}>
         <Typography variant="h4">Settings</Typography>
-        <TimePicker
-          label="Start time"
-          value={startTime}
-          onChange={(newTime) => {
-            setStartTime(newTime);
-            if (newTime) {
-              const timeInSeconds = newTime.hour() * 3600 + newTime.minute() * 60 + newTime.second();
-              setTime(timeInSeconds);
-            }
-          }}
-          ampm={false}
-          views={['hours', 'minutes', 'seconds']}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
+          <TimePicker
+            label="Start time"
+            value={startTime}
+            onChange={(newTime) => {
+              setStartTime(newTime);
+              if (newTime) {
+                const timeInSeconds = newTime.hour() * 3600 + newTime.minute() * 60 + newTime.second();
+                setTime(timeInSeconds);
+              }
+            }}
+            ampm={false}
+            views={['hours', 'minutes', 'seconds']}
+          />
+          <Button
+            variant="contained"
+            onClick={() => {
+              window.open(window.location.origin + window.location.pathname + '#/display', '_blank');
+            }}
+          >
+            Open display
+          </Button>
+        </Box>
       </Box>
       <Box sx={{ mt: 4 }}>
         <Typography variant="h4">Alerts</Typography>
