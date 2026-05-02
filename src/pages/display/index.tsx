@@ -1,16 +1,15 @@
 import { Box, Typography } from '@mui/material';
 import { useState, useEffect, useMemo } from 'react';
-import { formatDuration } from '../../utils/formatDuration';
 
 const DisplayPage = () => {
-  const [time, setTime] = useState(0);
+  const [formattedTime, setFormattedTime] = useState('00:00:00');
 
   const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
 
   useEffect(() => {
     worker.port.onmessage = (event) => {
-      const { rawTime } = event.data;
-      setTime(rawTime);
+      const { formattedTime: nextFormattedTime } = event.data;
+      setFormattedTime(nextFormattedTime);
     };
 
     worker.port.start();
@@ -25,7 +24,7 @@ const DisplayPage = () => {
         height: '100vh',
       }}
     >
-      <Typography variant="h1">{formatDuration(time)}</Typography>
+      <Typography variant="h1">{formattedTime}</Typography>
     </Box>
   );
 };

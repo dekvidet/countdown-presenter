@@ -1,7 +1,7 @@
-import { Box, Button, Container, Typography, Select, MenuItem } from '@mui/material';
+import { Box, Button, Container, Typography, Select, MenuItem, TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { formatDuration } from '../../utils/formatDuration';
+import { DEFAULT_TIME_FORMAT, formatDuration } from '../../utils/formatDuration';
 import dayjs, { Dayjs } from 'dayjs';
 
 const soundFiles = [
@@ -24,13 +24,17 @@ const ControlPage = () => {
   const [isPaused, setIsPaused] = useState(true);
   const [alerts, setAlerts] = useState<{ time: number; sound: string }[]>([]);
   const [sounds, setSounds] = useState<{ name: string; url: string }[]>(initialSounds);
+  const [timeFormat, setTimeFormat] = useState(DEFAULT_TIME_FORMAT);
 
   const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    worker.port.postMessage({ type: 'update', payload: { rawTime: time, formattedTime: formatDuration(time) } });
-  }, [time, worker]);
+    worker.port.postMessage({
+      type: 'update',
+      payload: { rawTime: time, formattedTime: formatDuration(time, timeFormat) },
+    });
+  }, [time, timeFormat, worker]);
 
   useEffect(() => {
     if (startTime) {
@@ -115,7 +119,7 @@ const ControlPage = () => {
   return (
     <Container>
       <Box sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="h1">{formatDuration(time)}</Typography>
+        <Typography variant="h1">{formatDuration(time, timeFormat)}</Typography>
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button variant="contained" sx={{ mr: 1 }} onClick={isPaused ? handleStart : handlePause}>
@@ -141,6 +145,12 @@ const ControlPage = () => {
             }}
             ampm={false}
             views={['hours', 'minutes', 'seconds']}
+          />
+          <TextField
+            label="Time format"
+            value={timeFormat}
+            onChange={(event) => setTimeFormat(event.target.value || DEFAULT_TIME_FORMAT)}
+            helperText="Use HH, MM, SS with any separators, for example HH.mm.ss or HH-MM-SS"
           />
           <Button
             variant="contained"
