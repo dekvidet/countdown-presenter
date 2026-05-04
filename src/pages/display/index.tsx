@@ -1,19 +1,10 @@
 import { Box, Typography } from '@mui/material';
-import { useState, useEffect, useMemo } from 'react';
+import { formatDuration } from '../../utils/formatDuration';
+import { useTimerSync } from '../../timer/useTimerSync';
 
 const DisplayPage = () => {
-  const [formattedTime, setFormattedTime] = useState('00:00:00');
-
-  const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
-
-  useEffect(() => {
-    worker.port.onmessage = (event) => {
-      const { formattedTime: nextFormattedTime } = event.data;
-      setFormattedTime(nextFormattedTime);
-    };
-
-    worker.port.start();
-  }, [worker]);
+  const { remainingSeconds, timerState } = useTimerSync();
+  const formattedTime = formatDuration(remainingSeconds, timerState.timeFormat);
 
   return (
     <Box

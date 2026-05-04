@@ -1,4 +1,6 @@
-export const DEFAULT_TIME_FORMAT = 'HH:mm:ss';
+import { DEFAULT_TIME_FORMAT } from '../timer/constants.js';
+
+export { DEFAULT_TIME_FORMAT };
 
 export const formatDuration = (totalSeconds: number, timeFormat = DEFAULT_TIME_FORMAT) => {
   const hours = Math.floor(totalSeconds / 3600);

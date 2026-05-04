@@ -12,23 +12,12 @@ import {
   Typography,
 } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_TIME_FORMAT, formatDuration } from '../../utils/formatDuration';
 import dayjs, { Dayjs } from 'dayjs';
-
-const soundFiles = [
-  '2_1bell.mp3',
-  '2bell.mp3',
-  'bell.mp3',
-  'bike_bell_long.mp3',
-  'bike_bell_short.mp3',
-  'medium_bike_bell.mp3',
-];
-
-const initialSounds = soundFiles.map(file => ({
-  name: file,
-  url: new URL(`sounds/${file}`, window.location.href).href,
-}));
+import { getDefaultSounds } from '../../timer/defaultSounds';
+import { useTimerSync } from '../../timer/useTimerSync';
+import type { AlertConfig } from '../../timer/types';
 
 const cardSx = {
   p: { xs: 2, md: 2.5 },
@@ -37,82 +26,56 @@ const cardSx = {
 };
 
 const ControlPage = () => {
-  const [time, setTime] = useState(0);
-  const [startTime, setStartTime] = useState<Dayjs | null>(dayjs().startOf('day'));
-  const [isPaused, setIsPaused] = useState(true);
-  const [alerts, setAlerts] = useState<{ time: number; sound: string }[]>([]);
-  const [sounds, setSounds] = useState<{ name: string; url: string }[]>(initialSounds);
-  const [timeFormat, setTimeFormat] = useState(DEFAULT_TIME_FORMAT);
+  const {
+    clear,
+    connectionState,
+    isPaused,
+    pause,
+    remainingSeconds,
+    replaceAlerts,
+    reset,
+    runtimeConfig,
+    setDurationSeconds,
+    setTimeFormat,
+    start,
+    timerState,
+  } = useTimerSync();
+  const [sounds, setSounds] = useState(() => getDefaultSounds());
+  const previousRemainingRef = useRef(remainingSeconds);
 
-  const worker = useMemo(() => new SharedWorker(new URL('../../workers/timer.worker.ts', import.meta.url)), []);
-  const timerRef = useRef<number | null>(null);
+  const startTime = useMemo(
+    () => dayjs().startOf('day').add(timerState.durationSeconds, 'second'),
+    [timerState.durationSeconds],
+  );
 
-  useEffect(() => {
-    worker.port.postMessage({
-      type: 'update',
-      payload: { rawTime: time, formattedTime: formatDuration(time, timeFormat) },
-    });
-  }, [time, timeFormat, worker]);
-
-  useEffect(() => {
-    if (startTime) {
-      const newTime = startTime.hour() * 3600 + startTime.minute() * 60 + startTime.second();
-      setTime(newTime);
-    }
-  }, [startTime]);
-
-  const handleStart = () => {
-    if (timerRef.current) return;
-    setIsPaused(false);
-    timerRef.current = setInterval(() => {
-      setTime((prevTime) => {
-        const newTime = prevTime - 1;
-        if (newTime <= 0) {
-          clearInterval(timerRef.current!);
-          timerRef.current = null;
-          setIsPaused(true);
-          return 0;
-        }
-        return newTime;
-      });
-    }, 1000);
-  };
-
-  const handlePause = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-      setIsPaused(true);
-    }
-  };
-
-  const handleReset = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    const newTime = startTime ? startTime.hour() * 3600 + startTime.minute() * 60 + startTime.second() : 0;
-    setTime(newTime);
-    setIsPaused(true);
-  };
-
-  const handleClear = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setTime(0);
-    setIsPaused(true);
-  };
+  const alerts = timerState.alerts;
+  const timeFormat = timerState.timeFormat;
 
   const handleAddAlert = () => {
-    setAlerts([...alerts, { time: 0, sound: sounds[0].name }]);
+    replaceAlerts([
+      ...alerts,
+      {
+        id: crypto.randomUUID(),
+        time: 0,
+        sound: sounds[0]?.name ?? '',
+      },
+    ]);
   };
 
   const handleAlertChange = (index: number, time: Dayjs | null, sound: string) => {
-    const newAlerts = [...alerts];
-    newAlerts[index] = { time: time ? time.hour() * 3600 + time.minute() * 60 + time.second() : 0, sound };
-    setAlerts(newAlerts);
+    const nextAlerts: AlertConfig[] = alerts.map((alert, alertIndex) => {
+      if (alertIndex !== index) {
+        return alert;
+      }
+
+      return {
+        ...alert,
+        time: time ? time.hour() * 3600 + time.minute() * 60 + time.second() : 0,
+        sound,
+      };
+    });
+
+    replaceAlerts(nextAlerts);
   };
 
   const handleCustomSound = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,18 +89,37 @@ const ControlPage = () => {
   };
 
   useEffect(() => {
-    alerts.forEach(alert => {
-      if (Math.floor(time) === alert.time) {
-        const audio = new Audio(sounds.find(s => s.name === alert.sound)?.url);
-        audio.play();
-      }
-    });
-  }, [time, alerts, sounds]);
+    const previousRemaining = previousRemainingRef.current;
+    previousRemainingRef.current = remainingSeconds;
 
-  const formattedTime = formatDuration(time, timeFormat);
-  const startLabel = startTime?.format('HH:mm:ss') ?? '00:00:00';
+    if (isPaused || previousRemaining <= remainingSeconds) {
+      return;
+    }
+
+    const triggeredAlerts = alerts.filter((alert) => (
+      alert.time <= previousRemaining && alert.time > remainingSeconds
+    ));
+
+    for (const alert of triggeredAlerts) {
+      const soundUrl = sounds.find((sound) => sound.name === alert.sound)?.url;
+      if (!soundUrl) {
+        continue;
+      }
+
+      void new Audio(soundUrl).play().catch(() => undefined);
+    }
+  }, [alerts, isPaused, remainingSeconds, sounds]);
+
+  const formattedTime = formatDuration(remainingSeconds, timeFormat);
+  const startLabel = startTime.format('HH:mm:ss');
   const statusLabel = isPaused ? 'Paused' : 'Running';
   const accentColor = isPaused ? '#f59e0b' : '#14b8a6';
+  const currentOrigin = window.location.origin;
+  const displayUrl = `${currentOrigin}${window.location.pathname}#/display`;
+  const remoteControlUrl = runtimeConfig?.remoteOrigin ? `${runtimeConfig.remoteOrigin}/#/control` : null;
+  const remoteDisplayUrl = runtimeConfig?.remoteOrigin ? `${runtimeConfig.remoteOrigin}/#/display` : null;
+  const localControlUrl = runtimeConfig?.localOrigin ? `${runtimeConfig.localOrigin}/#/control` : null;
+  const transportLabel = runtimeConfig ? `Websocket ${connectionState}` : 'Browser local';
 
   return (
     <Box
@@ -173,10 +155,18 @@ const ControlPage = () => {
                   }}
                   variant="outlined"
                 />
+                <Chip
+                  label={`Sync: ${transportLabel}`}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    borderRadius: 2,
+                  }}
+                  variant="outlined"
+                />
                 <Button
                   variant="contained"
                   onClick={() => {
-                    window.open(window.location.origin + window.location.pathname + '#/display', '_blank');
+                    window.open(displayUrl, '_blank');
                   }}
                 >
                   Open display
@@ -226,15 +216,15 @@ const ControlPage = () => {
                       <Button
                         variant="contained"
                         color={isPaused ? 'secondary' : 'primary'}
-                        onClick={isPaused ? handleStart : handlePause}
+                        onClick={isPaused ? start : pause}
                         sx={{ minWidth: 132 }}
                       >
                         {isPaused ? 'Start' : 'Pause'}
                       </Button>
-                      <Button variant="outlined" onClick={handleReset} sx={{ minWidth: 100 }}>
+                      <Button variant="outlined" onClick={reset} sx={{ minWidth: 100 }}>
                         Reset
                       </Button>
-                      <Button variant="outlined" color="inherit" onClick={handleClear} sx={{ minWidth: 100 }}>
+                      <Button variant="outlined" color="inherit" onClick={clear} sx={{ minWidth: 100 }}>
                         Clear
                       </Button>
                     </Stack>
@@ -265,8 +255,8 @@ const ControlPage = () => {
                           variant="subtitle1"
                           sx={{ mt: 0.25, color: item.tone ?? 'text.primary', fontVariantNumeric: 'tabular-nums' }}
                         >
-                          {item.value}
-                        </Typography>
+                      {item.value}
+                    </Typography>
                       </Paper>
                     ))}
                   </Box>
@@ -287,11 +277,10 @@ const ControlPage = () => {
                     label="Start time"
                     value={startTime}
                     onChange={(newTime) => {
-                      setStartTime(newTime);
-                      if (newTime) {
-                        const timeInSeconds = newTime.hour() * 3600 + newTime.minute() * 60 + newTime.second();
-                        setTime(timeInSeconds);
-                      }
+                      const timeInSeconds = newTime
+                        ? newTime.hour() * 3600 + newTime.minute() * 60 + newTime.second()
+                        : 0;
+                      setDurationSeconds(timeInSeconds);
                     }}
                     ampm={false}
                     views={['hours', 'minutes', 'seconds']}
@@ -314,6 +303,38 @@ const ControlPage = () => {
             </Stack>
 
             <Stack spacing={3}>
+              {runtimeConfig ? (
+                <Paper sx={cardSx}>
+                  <Typography variant="h4">Remote access</Typography>
+                  <Stack spacing={1.5} sx={{ mt: 2 }}>
+                    {localControlUrl ? (
+                      <TextField
+                        fullWidth
+                        label="Local control URL"
+                        value={localControlUrl}
+                        slotProps={{ input: { readOnly: true } }}
+                      />
+                    ) : null}
+                    {remoteControlUrl ? (
+                      <TextField
+                        fullWidth
+                        label="Remote control URL"
+                        value={remoteControlUrl}
+                        slotProps={{ input: { readOnly: true } }}
+                      />
+                    ) : null}
+                    {remoteDisplayUrl ? (
+                      <TextField
+                        fullWidth
+                        label="Remote display URL"
+                        value={remoteDisplayUrl}
+                        slotProps={{ input: { readOnly: true } }}
+                      />
+                    ) : null}
+                  </Stack>
+                </Paper>
+              ) : null}
+
               <Paper sx={cardSx}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
                   <Typography variant="h4">Alerts</Typography>
