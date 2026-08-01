@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 import type { ConnectionState } from './sync/types';
-import type { AlertConfig, RuntimeConfig, TimerState } from './types';
+import type { AlertConfig, DisplayStyle, RuntimeConfig, TimerMode, TimerState } from './types';
 
 export type TimerContextValue = {
   timerState: TimerState;
@@ -9,6 +9,10 @@ export type TimerContextValue = {
   connectionState: ConnectionState;
   runtimeConfig: RuntimeConfig | null;
   setDurationSeconds: (durationSeconds: number) => void;
+  setEndSeconds: (endSeconds: number) => void;
+  setMode: (mode: TimerMode) => void;
+  setContinueAfterEnd: (continueAfterEnd: boolean) => void;
+  setDisplayStyle: (style: Partial<DisplayStyle>) => void;
   start: () => void;
   pause: () => void;
   reset: () => void;

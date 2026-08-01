@@ -2,6 +2,12 @@
 
 Countdown Presenter is a small web app for running a presentation timer from one window while showing a clean, full-screen countdown in another. The control view lets you set the start time, start or pause the timer, reset or clear it, configure alert sounds, and customize the displayed time format including separators such as `HH:mm:ss`, `HH.mm.ss`, or `HH-MM-SS`.
 
+<p align="center">
+  <a href="https://github.com/dekvidet/countdown-presenter">
+    <img height="56" alt="Try It Now" src="https://img.shields.io/badge/Try%20It%20Now-2563EB?style=for-the-badge&logo=github&logoColor=white">
+  </a>
+</p>
+
 The app exposes two routes:
 
 - `/` or `#/control` for the operator controls
@@ -11,16 +17,6 @@ It now supports two sync modes:
 
 - Static browser mode for GitHub Pages and other static hosts, with control and display synchronized locally in the browser
 - Electron desktop mode, which starts a local HTTP + websocket server so the control dashboard and display can be opened from other devices in a browser on the same network
-
-## GitHub
-
-<p align="center">
-  <a href="https://github.com/dekvidet/countdown-presenter">
-    <img alt="View on GitHub" src="https://img.shields.io/badge/View%20the%20GitHub%20Repository-111111?style=for-the-badge&logo=github&logoColor=white">
-  </a>
-</p>
-
-Repository: https://github.com/dekvidet/countdown-presenter
 
 ## Installation
 

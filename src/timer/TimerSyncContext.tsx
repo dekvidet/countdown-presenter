@@ -1,12 +1,12 @@
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
+  useSyncExternalStore,
   type PropsWithChildren,
 } from 'react';
 import { createTimerSyncClient } from './sync/createClient';
-import { getRemainingSeconds } from './state.js';
+import { getRemainingSeconds, hasReachedEnd } from './state.js';
 import { TimerSyncContext, type TimerContextValue } from './timerSyncContext';
 import type { AlertConfig, RuntimeConfig } from './types';
 
@@ -14,23 +14,13 @@ export const TimerSyncProvider = ({
   children,
   runtimeConfig,
 }: PropsWithChildren<{ runtimeConfig: RuntimeConfig | null }>) => {
-  const clientRef = useRef(createTimerSyncClient(runtimeConfig));
-  const [snapshot, setSnapshot] = useState(clientRef.current.getSnapshot());
+  const [client] = useState(() => createTimerSyncClient(runtimeConfig));
+  const snapshot = useSyncExternalStore(
+    client.subscribe,
+    client.getSnapshot,
+    client.getSnapshot,
+  );
   const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const client = clientRef.current;
-    const unsubscribe = client.subscribe(() => {
-      setSnapshot(client.getSnapshot());
-    });
-
-    setSnapshot(client.getSnapshot());
-
-    return () => {
-      unsubscribe();
-      client.destroy();
-    };
-  }, []);
 
   useEffect(() => {
     if (snapshot.timerState.isPaused) {
@@ -49,7 +39,7 @@ export const TimerSyncProvider = ({
 
   const value = useMemo<TimerContextValue>(() => {
     const remainingSeconds = getRemainingSeconds(snapshot.timerState, now);
-    const isPaused = snapshot.timerState.isPaused || remainingSeconds === 0;
+    const isPaused = snapshot.timerState.isPaused || (!snapshot.timerState.continueAfterEnd && hasReachedEnd(snapshot.timerState, now));
 
     return {
       timerState: snapshot.timerState,
@@ -58,28 +48,32 @@ export const TimerSyncProvider = ({
       connectionState: snapshot.connectionState,
       runtimeConfig,
       setDurationSeconds: (durationSeconds: number) => {
-        clientRef.current.dispatch({ type: 'setDuration', durationSeconds });
+        client.dispatch({ type: 'setDuration', durationSeconds });
       },
+      setEndSeconds: (endSeconds: number) => client.dispatch({ type: 'setEndSeconds', endSeconds }),
+      setMode: (mode) => client.dispatch({ type: 'setMode', mode }),
+      setContinueAfterEnd: (continueAfterEnd) => client.dispatch({ type: 'setContinueAfterEnd', continueAfterEnd }),
+      setDisplayStyle: (style) => client.dispatch({ type: 'setDisplayStyle', style }),
       start: () => {
-        clientRef.current.dispatch({ type: 'start' });
+        client.dispatch({ type: 'start' });
       },
       pause: () => {
-        clientRef.current.dispatch({ type: 'pause' });
+        client.dispatch({ type: 'pause' });
       },
       reset: () => {
-        clientRef.current.dispatch({ type: 'reset' });
+        client.dispatch({ type: 'reset' });
       },
       clear: () => {
-        clientRef.current.dispatch({ type: 'clear' });
+        client.dispatch({ type: 'clear' });
       },
       setTimeFormat: (timeFormat: string) => {
-        clientRef.current.dispatch({ type: 'setTimeFormat', timeFormat });
+        client.dispatch({ type: 'setTimeFormat', timeFormat });
       },
       replaceAlerts: (alerts: AlertConfig[]) => {
-        clientRef.current.dispatch({ type: 'replaceAlerts', alerts });
+        client.dispatch({ type: 'replaceAlerts', alerts });
       },
     };
-  }, [now, runtimeConfig, snapshot.connectionState, snapshot.timerState]);
+  }, [client, now, runtimeConfig, snapshot.connectionState, snapshot.timerState]);
 
   return (
     <TimerSyncContext.Provider value={value}>

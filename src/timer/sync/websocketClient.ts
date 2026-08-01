@@ -1,4 +1,4 @@
-import { DEFAULT_TIMER_STATE, normalizeTimerState } from '../state.js';
+import { DEFAULT_TIMER_STATE, normalizeTimerState, reduceTimerState } from '../state.js';
 import type { RuntimeConfig, TimerAction } from '../types';
 import type { ConnectionState, TimerSyncClient, TimerSyncSnapshot } from './types';
 
@@ -95,6 +95,15 @@ export const createWebsocketTimerSyncClient = (runtimeConfig: RuntimeConfig): Ti
       if (socket?.readyState !== WebSocket.OPEN) {
         return;
       }
+
+      // Reflect the operator's changes immediately instead of waiting for the
+      // server round-trip. The authoritative broadcast below will reconcile
+      // this snapshot for every connected client.
+      snapshot = {
+        ...snapshot,
+        timerState: reduceTimerState(snapshot.timerState, action, Date.now()),
+      };
+      notify();
 
       socket.send(JSON.stringify({
         type: 'action',
