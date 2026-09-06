@@ -18,6 +18,7 @@ export const createWebsocketTimerSyncClient = (runtimeConfig: RuntimeConfig): Ti
   let snapshot: TimerSyncSnapshot = {
     timerState: DEFAULT_TIMER_STATE,
     connectionState: 'connecting',
+    displayConnected: false,
   };
 
   const notify = () => {
@@ -44,11 +45,21 @@ export const createWebsocketTimerSyncClient = (runtimeConfig: RuntimeConfig): Ti
 
     socket.addEventListener('open', () => {
       updateConnectionState('connected');
+      socket?.send(JSON.stringify({
+        type: 'presence',
+        role: window.location.hash.includes('/display') ? 'display' : 'control',
+      }));
     });
 
     socket.addEventListener('message', (event) => {
       try {
-        const payload = JSON.parse(event.data) as { type: string; state?: unknown };
+        const payload = JSON.parse(event.data) as { type: string; state?: unknown; displayConnected?: boolean };
+
+        if (payload.type === 'presence') {
+          snapshot = { ...snapshot, displayConnected: payload.displayConnected === true };
+          notify();
+          return;
+        }
 
         if (payload.type !== 'state' && payload.type !== 'init') {
           return;
@@ -71,6 +82,7 @@ export const createWebsocketTimerSyncClient = (runtimeConfig: RuntimeConfig): Ti
         return;
       }
 
+      snapshot = { ...snapshot, displayConnected: false };
       updateConnectionState('disconnected');
       reconnectTimer = window.setTimeout(connect, reconnectDelayMs);
     });

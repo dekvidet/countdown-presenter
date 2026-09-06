@@ -1,0 +1,22 @@
+[
+  {"id":"timer-complete","file":"timer-complete.wav","category":"timer","source":"https://mixkit.co/free-sound-effects/download/916/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":600},
+  {"id":"countdown-beep","file":"countdown-beep.wav","category":"countdown","source":"https://mixkit.co/free-sound-effects/download/2866/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":220},
+  {"id":"countdown-final","file":"countdown-final.wav","category":"countdown","source":"https://mixkit.co/free-sound-effects/download/2866/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":750},
+  {"id":"ding","file":"ding.wav","category":"notification","source":"https://mixkit.co/free-sound-effects/download/2867/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":902},
+  {"id":"start","file":"start.wav","category":"ui","source":"https://mixkit.co/free-sound-effects/download/2521/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":420},
+  {"id":"pause","file":"pause.wav","category":"ui","source":"https://mixkit.co/free-sound-effects/download/2521/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":420},
+  {"id":"lap","file":"lap.wav","category":"stopwatch","source":"https://mixkit.co/free-sound-effects/download/1073/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":180},
+  {"id":"interval-rest","file":"interval-rest.wav","category":"interval","source":"https://mixkit.co/free-sound-effects/download/918/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":1200},
+  {"id":"alarm-loop","file":"alarm-loop.wav","category":"alarm","source":"https://mixkit.co/free-sound-effects/download/988/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":4000},
+  {"id":"interval-change","file":"interval-change.wav","category":"interval","source":"https://mixkit.co/free-sound-effects/download/918/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":850},
+  {"id":"interval-work","file":"interval-work.wav","category":"interval","source":"https://mixkit.co/free-sound-effects/download/918/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":1200},
+  {"id":"ready","file":"ready.wav","category":"workout","source":"https://mixkit.co/free-sound-effects/download/916/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":2200},
+  {"id":"go","file":"go.wav","category":"workout","source":"https://mixkit.co/free-sound-effects/download/1076/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":950},
+  {"id":"warning","file":"warning.wav","category":"warning","source":"https://mixkit.co/free-sound-effects/download/771/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":1300},
+  {"id":"tick","file":"tick.wav","category":"clock","source":"https://mixkit.co/free-sound-effects/download/1061/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":23},
+  {"id":"tick-tock-loop","file":"tick-tock-loop.wav","category":"clock","source":"https://mixkit.co/free-sound-effects/download/1045/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":8000},
+  {"id":"kitchen-timer-bell","file":"kitchen-timer-bell.wav","category":"timer","source":"https://mixkit.co/free-sound-effects/download/1791/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":1583},
+  {"id":"success-chime","file":"success-chime.wav","category":"notification","source":"https://mixkit.co/free-sound-effects/download/937/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":3023},
+  {"id":"buzzer","file":"buzzer.wav","category":"alert","source":"https://mixkit.co/free-sound-effects/download/2964/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":800},
+  {"id":"reset","file":"reset.wav","category":"ui","source":"https://mixkit.co/free-sound-effects/download/2521/?context=item+grid","license":"Mixkit-Sound-Effects-License","author":"Mixkit","durationMs":300}
+]

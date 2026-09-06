@@ -106,6 +106,7 @@ export const startDesktopServer = async ({ port = 0 } = {}) => {
   const websocketServer = new WebSocketServer({
     noServer: true,
   });
+  const clientRoles = new Map();
 
   const broadcastState = (type = 'state') => {
     const payload = JSON.stringify({
@@ -120,15 +121,30 @@ export const startDesktopServer = async ({ port = 0 } = {}) => {
     }
   };
 
+  const broadcastPresence = () => {
+    const displayConnected = [...clientRoles.values()].some((role) => role === 'display');
+    const payload = JSON.stringify({ type: 'presence', displayConnected });
+    for (const client of websocketServer.clients) {
+      if (client.readyState === client.OPEN) client.send(payload);
+    }
+  };
+
   websocketServer.on('connection', (socket) => {
     socket.send(JSON.stringify({
       type: 'init',
       state: timerState,
     }));
+    broadcastPresence();
 
     socket.on('message', (rawMessage) => {
       try {
         const payload = JSON.parse(rawMessage.toString());
+
+        if (payload?.type === 'presence') {
+          clientRoles.set(socket, payload.role === 'display' ? 'display' : 'control');
+          broadcastPresence();
+          return;
+        }
 
         if (payload?.type !== 'action' || !payload.action) {
           return;
@@ -139,6 +155,11 @@ export const startDesktopServer = async ({ port = 0 } = {}) => {
       } catch {
         return;
       }
+    });
+
+    socket.on('close', () => {
+      clientRoles.delete(socket);
+      broadcastPresence();
     });
   });
 

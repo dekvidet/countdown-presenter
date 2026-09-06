@@ -5,6 +5,7 @@ export type ConnectionState = 'local' | 'connecting' | 'connected' | 'disconnect
 export type TimerSyncSnapshot = {
   timerState: TimerState;
   connectionState: ConnectionState;
+  displayConnected: boolean;
 };
 
 export type TimerSyncClient = {

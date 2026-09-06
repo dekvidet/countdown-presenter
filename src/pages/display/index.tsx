@@ -7,7 +7,18 @@ const DisplayPage = () => {
   const { remainingSeconds, timerState } = useTimerSync();
   const formattedTime = formatDuration(remainingSeconds, timerState.timeFormat);
   const previousSeconds = useRef(remainingSeconds);
-  const [isFlashing, setIsFlashing] = useState(false);
+  const [flashSequence, setFlashSequence] = useState<{
+    startedAt: number;
+    durationSeconds: number;
+    alternateTimeSeconds: number;
+  } | null>(null);
+  const [animationNow, setAnimationNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!timerState.flashTest) return;
+    setFlashSequence(timerState.flashTest);
+    setAnimationNow(Date.now());
+  }, [timerState.flashTest]);
 
   useEffect(() => {
     const previous = previousSeconds.current;
@@ -20,22 +31,35 @@ const DisplayPage = () => {
     const crossed = (time: number) => timerState.mode === 'countdown'
       ? previous > time && remainingSeconds <= time
       : previous < time && remainingSeconds >= time;
-    const triggeredFlashAlerts = timerState.alerts.filter((alert) => alert.flash && crossed(alert.time));
+    const triggeredFlashAlerts = timerState.alerts.filter((alert) => alert.enabled && alert.flash && crossed(alert.time));
 
     if (triggeredFlashAlerts.length === 0) {
       return;
     }
 
-    setIsFlashing(true);
-    const flashDurationSeconds = Math.max(
-      ...triggeredFlashAlerts.map((alert) => alert.flashDurationSeconds),
-    );
-    const timeout = window.setTimeout(
-      () => setIsFlashing(false),
-      flashDurationSeconds * 1000,
-    );
-    return () => window.clearTimeout(timeout);
+    const longest = triggeredFlashAlerts.reduce((current, alert) => (
+      alert.flashDurationSeconds > current.flashDurationSeconds ? alert : current
+    ));
+    setFlashSequence({
+      startedAt: Date.now(),
+      durationSeconds: longest.flashDurationSeconds,
+      alternateTimeSeconds: longest.flashAlternateTimeSeconds,
+    });
+    setAnimationNow(Date.now());
   }, [remainingSeconds, timerState.alerts, timerState.isPaused, timerState.mode]);
+
+  useEffect(() => {
+    if (!flashSequence) return;
+    const interval = window.setInterval(() => setAnimationNow(Date.now()), 50);
+    return () => window.clearInterval(interval);
+  }, [flashSequence]);
+
+  const elapsedSeconds = flashSequence ? (animationNow - flashSequence.startedAt) / 1000 : 0;
+  const flashIsActive = Boolean(flashSequence && elapsedSeconds < flashSequence.durationSeconds);
+  const isFlashing = flashIsActive && (
+    !flashSequence?.alternateTimeSeconds
+    || Math.floor(elapsedSeconds / flashSequence.alternateTimeSeconds) % 2 === 0
+  );
 
   return (
     <Box
@@ -43,7 +67,9 @@ const DisplayPage = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        width: '100vw',
         height: '100vh',
+        overflow: 'hidden',
         bgcolor: isFlashing ? timerState.displayStyle.flashBackgroundColor : timerState.displayStyle.backgroundColor,
         color: isFlashing ? timerState.displayStyle.flashTextColor : timerState.displayStyle.textColor,
         transition: 'background-color 90ms ease, color 90ms ease',
@@ -57,6 +83,8 @@ const DisplayPage = () => {
           letterSpacing: '-0.04em',
           lineHeight: 1,
           fontVariantNumeric: 'tabular-nums',
+          fontFamily: timerState.displayStyle.fontFamily,
+          whiteSpace: 'nowrap',
         }}
       >
         {formattedTime}

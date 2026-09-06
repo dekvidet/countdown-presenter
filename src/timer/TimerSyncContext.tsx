@@ -30,7 +30,7 @@ export const TimerSyncProvider = ({
 
     const interval = window.setInterval(() => {
       setNow(Date.now());
-    }, 250);
+    }, 50);
 
     return () => {
       window.clearInterval(interval);
@@ -46,9 +46,13 @@ export const TimerSyncProvider = ({
       remainingSeconds,
       isPaused,
       connectionState: snapshot.connectionState,
+      displayConnected: snapshot.displayConnected,
       runtimeConfig,
       setDurationSeconds: (durationSeconds: number) => {
         client.dispatch({ type: 'setDuration', durationSeconds });
+      },
+      setCurrentSeconds: (currentSeconds: number) => {
+        client.dispatch({ type: 'setCurrentSeconds', currentSeconds });
       },
       setEndSeconds: (endSeconds: number) => client.dispatch({ type: 'setEndSeconds', endSeconds }),
       setMode: (mode) => client.dispatch({ type: 'setMode', mode }),
@@ -60,8 +64,14 @@ export const TimerSyncProvider = ({
       pause: () => {
         client.dispatch({ type: 'pause' });
       },
+      restart: () => {
+        client.dispatch({ type: 'restart' });
+      },
       reset: () => {
         client.dispatch({ type: 'reset' });
+      },
+      resetFactory: () => {
+        client.dispatch({ type: 'resetFactory' });
       },
       clear: () => {
         client.dispatch({ type: 'clear' });
@@ -72,8 +82,14 @@ export const TimerSyncProvider = ({
       replaceAlerts: (alerts: AlertConfig[]) => {
         client.dispatch({ type: 'replaceAlerts', alerts });
       },
+      triggerCue: (cueId: string) => {
+        client.dispatch({ type: 'triggerCue', cueId });
+      },
+      testFlash: (durationSeconds: number, alternateTimeSeconds: number) => {
+        client.dispatch({ type: 'testFlash', durationSeconds, alternateTimeSeconds });
+      },
     };
-  }, [client, now, runtimeConfig, snapshot.connectionState, snapshot.timerState]);
+  }, [client, now, runtimeConfig, snapshot.connectionState, snapshot.displayConnected, snapshot.timerState]);
 
   return (
     <TimerSyncContext.Provider value={value}>
